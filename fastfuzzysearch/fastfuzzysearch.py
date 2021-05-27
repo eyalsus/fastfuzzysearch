@@ -35,11 +35,12 @@ class FastFuzzySearch:
         self.fastsearch.fit()
 
 
-    def lookup(self, ssdeep_hash, one_match=False):
+    def lookup(self, ssdeep_hash, one_match=False, similarity_threshold=50):
         results = []
         matches = self.fastsearch.lookup(ssdeep_hash, one_match=one_match)
         for match in matches:
-            ssdeep_score = pyssdeep.compare(ssdeep_hash, match['ssdeep'])
-            if ssdeep_score > 50:
+            score = pyssdeep.compare(ssdeep_hash, match['ssdeep'])
+            if score > similarity_threshold:
+                match['score'] = score
                 results.append(match)
         return results
