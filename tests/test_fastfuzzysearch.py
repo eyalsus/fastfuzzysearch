@@ -1,6 +1,7 @@
 from fastfuzzysearch import FastFuzzySearch
 
-def test_normal_flow():
+
+def train(finalize=False):
     fuzzy = FastFuzzySearch(10, train_step_size=3)
     ssdeep_list = [
         '768:kskE8uorKordv9EWNrd2DLQL6rFXZ0Jnibi4TKXh+2LvvzMKeqQqSnUSPNanTot:kphuorKordvtrd2nrFXmhiPyJvz75SU6',
@@ -12,8 +13,18 @@ def test_normal_flow():
     ]
     
     for idx, ssdeep_hash in enumerate(ssdeep_list):
-        fuzzy.add_ssdeep_hash(ssdeep_hash, {'i': idx, 'ssdeep': ssdeep_hash})
+        fuzzy.add_ssdeep_hash(ssdeep_hash, {'i': idx})
 
-    fuzzy.fit()
+    fuzzy.fit(finalize=finalize)
+    return fuzzy
 
-    fuzzy.lookup('24:VCZUZ7RPlo1111111111111111111111X5A97Xmhs5S8:NtViqI0fWN1D25A9qK/', one_match=True)
+def test_normal_flow():
+    fuzzy = train(finalize=False)
+    assert len(fuzzy.lookup('24:VCZUZ7RPlo1111111111111111111111X5A97Xmhs5S8:NtViqI0fWN1D25A9qK/', one_match=True)) > 0
+    assert len(fuzzy.final_automaton_ngrams) > 0
+
+def test_finallize():
+    fuzzy = train(finalize=True)
+    assert len(fuzzy.lookup('24:VCZUZ7RPlo1111111111111111111111X5A97Xmhs5S8:NtViqI0fWN1D25A9qK/', one_match=True)) > 0
+    assert len(fuzzy.final_automaton_ngrams) == 0
+

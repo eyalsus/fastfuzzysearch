@@ -10,12 +10,12 @@ if python_version.major < 3:
 setup(
   name='fastfuzzysearch',  
   packages=['fastfuzzysearch'],  
-  version='0.0.2', 
+  version='0.0.3', 
   license='BSD-3-Clause and Public-Domain',
   description='a Python package for fast fuzzy search entirely in-memory based',
   author='Eyal Paz',
   author_email='eyalsus@gmail.com',  
-  url='https://github.com/eyalsus/fastsearch', 
+  url='https://github.com/eyalsus/fastfuzzysearch', 
   platforms=['Linux', 'MacOSX', 'Windows'],
   keywords=['search', 'fastsearch', 'fuzzy search', 'ngrams', 'aho-corasick', 'fastfuzzysearch', 'fuzzy'], 
   install_requires=[

@@ -19,6 +19,7 @@ class FastFuzzySearch:
         if self.kb_size > 0 and self.kb_size % self.train_step_size == 0:
             self.fit()
         
+        descriptor['ssdeep'] = ssdeep_hash
         matches = None
         if self.kb_size > self.train_step_size:
             matches = self.lookup(ssdeep_hash, one_match=True)
@@ -28,11 +29,13 @@ class FastFuzzySearch:
                 self.final_automaton_ngrams[ngram] = descriptor
             self.kb_size += 1
     
-    def fit(self):
+    def fit(self, finalize=False):
         self.fastsearch = FastSearch(COLON_PATTERN, self.ngram_length)
         for word, descriptor in self.final_automaton_ngrams.items():
             self.fastsearch.add_sentence(word, descriptor=descriptor)
         self.fastsearch.fit()
+        if finalize:
+            self.final_automaton_ngrams.clear()
 
 
     def lookup(self, ssdeep_hash, one_match=False, similarity_threshold=50):
