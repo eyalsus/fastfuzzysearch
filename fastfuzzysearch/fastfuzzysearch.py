@@ -41,7 +41,7 @@ class FastFuzzySearch:
     def fit(self, finalize=False):
         self.fastsearch = FastSearch(COLON_PATTERN, self.ngram_length)
         for word, descriptor in self.final_automaton_ngrams.items():
-            if descriptor['appearances'] > 1 or len(final_automaton_ngrams) < 10000:
+            if descriptor['appearances'] > 1 or self.kb_size < 10000:
                 self.fastsearch.add_sentence(word, descriptor=descriptor['descriptor'])
         self.fastsearch.fit()
         if finalize:
