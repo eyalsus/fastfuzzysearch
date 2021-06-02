@@ -10,6 +10,7 @@ class FastFuzzySearch:
         self.ngram_length = ngram_length
         self.train_step_size = train_step_size
         self.fastsearch = FastSearch(COLON_PATTERN, self.ngram_length)
+        self.is_trained = False
         self.kb_size = 0
         self.final_automaton_ngrams = {}
 
@@ -21,21 +22,31 @@ class FastFuzzySearch:
         
         descriptor['ssdeep'] = ssdeep_hash
         matches = None
-        if self.kb_size > self.train_step_size:
+        if self.is_trained:
             matches = self.lookup(ssdeep_hash, one_match=True)
     
         if not matches:
             for ngram in ngram_set:
-                self.final_automaton_ngrams[ngram] = descriptor
+                if ngram not in self.final_automaton_ngrams:
+                    self.final_automaton_ngrams[ngram] = {'appearances': 1, 'descriptor': descriptor}
+                else:
+                    self.final_automaton_ngrams[ngram]['appearances'] += 1
             self.kb_size += 1
+        else:
+            for ngram in ngram_set:
+                if ngram in self.final_automaton_ngrams:
+                    self.final_automaton_ngrams[ngram]['appearances'] += 1
+
     
     def fit(self, finalize=False):
         self.fastsearch = FastSearch(COLON_PATTERN, self.ngram_length)
         for word, descriptor in self.final_automaton_ngrams.items():
-            self.fastsearch.add_sentence(word, descriptor=descriptor)
+            if descriptor['appearances'] > 1:
+                self.fastsearch.add_sentence(word, descriptor=descriptor['descriptor'])
         self.fastsearch.fit()
         if finalize:
             self.final_automaton_ngrams.clear()
+        self.is_trained = True
 
 
     def lookup(self, ssdeep_hash, one_match=False, similarity_threshold=50):
