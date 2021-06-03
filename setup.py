@@ -10,7 +10,7 @@ if python_version.major < 3:
 setup(
   name='fastfuzzysearch',  
   packages=['fastfuzzysearch'],  
-  version='0.0.4', 
+  version='0.0.5', 
   license='BSD-3-Clause and Public-Domain',
   description='a Python package for fast fuzzy search entirely in-memory based',
   author='Eyal Paz',
