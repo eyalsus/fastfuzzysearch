@@ -1,8 +1,14 @@
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
+import subprocess
 from sys import version_info as python_version
+
+version = (
+    subprocess.run(["git", "describe", "--tags"], stdout=subprocess.PIPE)
+    .stdout.decode("utf-8")
+    .strip()
+)
+assert "." in version
+
 
 if python_version.major < 3:
     raise ValueError('Python %s is not supported' % python_version)
@@ -10,7 +16,7 @@ if python_version.major < 3:
 setup(
   name='fastfuzzysearch',  
   packages=['fastfuzzysearch'],  
-  version='0.0.5', 
+  version=version, 
   license='BSD-3-Clause and Public-Domain',
   description='a Python package for fast fuzzy search entirely in-memory based',
   author='Eyal Paz',
