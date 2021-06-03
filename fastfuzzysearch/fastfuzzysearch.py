@@ -26,12 +26,16 @@ class FastFuzzySearch:
             matches = self.lookup(ssdeep_hash, one_match=True)
     
         if not matches:
+            add_to_kb = False
             for ngram in ngram_set:
-                if ngram not in self.final_automaton_ngrams:
-                    self.final_automaton_ngrams[ngram] = {'appearances': 1, 'descriptor': descriptor}
-                else:
-                    self.final_automaton_ngrams[ngram]['appearances'] += 1
-            self.kb_size += 1
+                if self.count_unique_chars(ngram) > self.ngram_length / 2:
+                    add_to_kb = True
+                    if ngram not in self.final_automaton_ngrams:
+                        self.final_automaton_ngrams[ngram] = {'appearances': 1, 'descriptor': descriptor}
+                    else:
+                        self.final_automaton_ngrams[ngram]['appearances'] += 1
+            if add_to_kb:
+                self.kb_size += 1
         else:
             for ngram in ngram_set:
                 if ngram in self.final_automaton_ngrams:
@@ -58,3 +62,9 @@ class FastFuzzySearch:
                 match['score'] = score
                 results.append(match)
         return results
+
+    def count_unique_chars(self, s):
+        char_set = set()
+        for ch in s:
+            char_set.add(ch)
+        return len(char_set)
