@@ -1,7 +1,7 @@
 
 import re
 import pyssdeep
-from fastsearch import FastSearch 
+from fastsearch import FastSearch
 
 COLON_PATTERN = re.compile(':')
 
@@ -56,11 +56,15 @@ class FastFuzzySearch:
     def lookup(self, ssdeep_hash, one_match=False, similarity_threshold=50):
         results = []
         matches = self.fastsearch.lookup(ssdeep_hash, one_match=one_match)
+        compared_hashes = set()
         for match in matches:
-            score = pyssdeep.compare(ssdeep_hash, match['ssdeep'])
-            if score > similarity_threshold:
-                match['score'] = score
-                results.append(match)
+            matched_ssdeep = match['ssdeep']
+            if matched_ssdeep not in compared_hashes:
+                score = pyssdeep.compare(ssdeep_hash, matched_ssdeep)
+                if score > similarity_threshold:
+                    match['score'] = score
+                    results.append(match)
+                    compared_hashes.add(matched_ssdeep)
         return results
 
     def count_unique_chars(self, s):

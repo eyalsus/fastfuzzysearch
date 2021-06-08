@@ -5,6 +5,7 @@ def train(finalize=False):
     fuzzy = FastFuzzySearch(10, train_step_size=3)
     ssdeep_list = [
         '768:kskE8uorKordv9EWNrd2DLQL6rFXZ0Jnibi4TKXh+2LvvzMKeqQqSnUSPNanTot:kphuorKordvtrd2nrFXmhiPyJvz75SU6',
+        '768:kskE8uorKordv9EWNrd2DLQL6rFXZ0Jnibi4TKXh+2LvvzMKeqQqSnUSPNanTot:kphuorKordvtrd2nrFXmhiPyJvz75SU6',
         '768:kskE8uoaaaaaaaaL6rFXZ0Jnibi4TKXh+2LvvzMKeqQqSbbbbbbTot:kphuorKordvtrdccccccciPyJvz75SU6',
         '24:V1a0FlxVoXIhdITYJhDp/quNg/FRSeP+fEXUXmQB8gYfXhdaVMi5Vj:na0FlxnhdIUJhDpCF3i+1JtRY/r',
         '24:V10URhx9IkjsvmCiHpCQgkg6X5AyYsXmUbQKNWgBq:nbhxgvmCiHpNg85AyuwNhBq',
@@ -30,3 +31,12 @@ def test_finallize():
     assert len(fuzzy.lookup('24:VCZUZ7RPlo1111111111111111111111X5A97Xmhs5S8:NtViqI0fWN1D25A9qK/', one_match=True)) > 0
     assert len(fuzzy.final_automaton_ngrams) == 0
 
+def test_not_repeating_one_match():
+    fuzzy = train(finalize=True)
+    assert len(fuzzy.lookup('768:kskE8uorKordv9EWNr333DLQL6rFXZ0nibi4TKXh+2LvvzMKeqQqSnUSPNanTot:kphuorKordvtrd2nrFXmhiPyJvz75SU6', one_match=True)) == 1
+    assert len(fuzzy.final_automaton_ngrams) == 0
+
+def test_not_repeating_matches():
+    fuzzy = train(finalize=True)
+    assert len(fuzzy.lookup('768:kskE8uorKordv9EWNr333DLQL6rFXZ0nibi4TKXh+2LvvzMKeqQqSnUSPNanTot:kphuorKordvtrd2nrFXmhiPyJvz75SU6', one_match=False)) == 1
+    assert len(fuzzy.final_automaton_ngrams) == 0
