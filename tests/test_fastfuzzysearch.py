@@ -47,6 +47,6 @@ def test_not_repeating_matches():
 def test_whitelist():
     # fuzzy = train(finalize=True, ngram_whitelist=set(['423TESQw', '23TESQwa', '3TESQwaa', 'TESQwaaa', 'ESQwaaav', 'SQwaaava', 'Qwaaavaa', 'waaavaaa']))
     fuzzy = train(finalize=True, ngram_whitelist=set(['423TESQw', 'dddx423T', '23TESQwa']))
-    assert len(fuzzy.lookup('12:423TESQwaaavdddsssssdddddx423TESQwrrsssssssrrr2AlIa:423TESQw', one_match=False)) == 2
+    assert len(fuzzy.lookup('12:423TESQwaaavdddsssssdddddx423TESQwrrsssssssrrr2AlIa:423TESQw', one_match=False)) == 1
     fuzzy = train(finalize=True, ngram_whitelist=set(['423TESQw', 'dddx423T', '23TESQwa', 'Qwaaavdd', 'waaavddd', 'ddddx423', 'ESQwaaav', 'dddddx42', '3TESQwrr', 'dx423TES', 'SQwaaavd', 'ddx423TE', '23TESQwr', 'x423TESQ', 'TESQwaaa', '3TESQwaa']))
     assert len(fuzzy.lookup('12:423TESQwaaavdddsssssdddddx423TESQwrrsssssssrrr2AlIa:423TESQw', one_match=False)) == 0
