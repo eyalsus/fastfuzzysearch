@@ -1,8 +1,8 @@
 from fastfuzzysearch import FastFuzzySearch
 
 
-def train(finalize=False):
-    fuzzy = FastFuzzySearch(10, train_step_size=3)
+def train(finalize=False, ngram_whitelist=None):
+    fuzzy = FastFuzzySearch(8, train_step_size=3)
     ssdeep_list = [
         '768:kskE8uorKordv9EWNrd2DLQL6rFXZ0Jnibi4TKXh+2LvvzMKeqQqSnUSPNanTot:kphuorKordvtrd2nrFXmhiPyJvz75SU6',
         '768:kskE8uorKordv9EWNrd2DLQL6rFXZ0Jnibi4TKXh+2LvvzMKeqQqSnUSPNanTot:kphuorKordvtrd2nrFXmhiPyJvz75SU6',
@@ -13,10 +13,13 @@ def train(finalize=False):
         '24:Vj+s7xVoXnpc6WdXpkUpwsph3Y4FX5MXmPS/8r3+6l:p+s7xapjWdpNpwspBt3PH3l',
         '12:Vk7LO9CdhedcY6H92V2x9Sy/lmCljUnOHCKCIp82AlIa:VsMmhRXdJScm8BHFCIaSa',
         '12:Vk7LOaaaaaaaaaaaaaax9Sy/lmCljUnObbbbbbbbbbb2AlIa:VsMmhRXdJSccccccSa',
+        '12:vfvfvaaaaaaaaaaaaaaxvfvfv/vfvfvObbbbbbbbbbb2AlIa:42342Scc43243aSa',
+        '12:423TESQwaaavaaaaaaaaaaaaaax423TESQwbbbbbbbbbbbbbbbIa:423TESQw',
+        '12:423TESQwaaavddddddddddddddx423TESQwrrrrrrrrrrrrrrrIa:423TESQw',
     ]
     
     for idx, ssdeep_hash in enumerate(ssdeep_list):
-        fuzzy.add_ssdeep_hash(ssdeep_hash, {'i': idx})
+        fuzzy.add_ssdeep_hash(ssdeep_hash, {'i': idx}, ngram_whitelist=ngram_whitelist)
 
     fuzzy.fit(finalize=finalize)
     return fuzzy
@@ -40,3 +43,10 @@ def test_not_repeating_matches():
     fuzzy = train(finalize=True)
     assert len(fuzzy.lookup('768:kskE8uorKordv9EWNr333DLQL6rFXZ0nibi4TKXh+2LvvzMKeqQqSnUSPNanTot:kphuorKordvtrd2nrFXmhiPyJvz75SU6', one_match=False)) == 1
     assert len(fuzzy.final_automaton_ngrams) == 0
+
+def test_whitelist():
+    # fuzzy = train(finalize=True, ngram_whitelist=set(['423TESQw', '23TESQwa', '3TESQwaa', 'TESQwaaa', 'ESQwaaav', 'SQwaaava', 'Qwaaavaa', 'waaavaaa']))
+    fuzzy = train(finalize=True, ngram_whitelist=set(['423TESQw', 'dddx423T', '23TESQwa']))
+    assert len(fuzzy.lookup('12:423TESQwaaavdddsssssdddddx423TESQwrrsssssssrrr2AlIa:423TESQw', one_match=False)) == 2
+    fuzzy = train(finalize=True, ngram_whitelist=set(['423TESQw', 'dddx423T', '23TESQwa', 'Qwaaavdd', 'waaavddd', 'ddddx423', 'ESQwaaav', 'dddddx42', '3TESQwrr', 'dx423TES', 'SQwaaavd', 'ddx423TE', '23TESQwr', 'x423TESQ', 'TESQwaaa', '3TESQwaa']))
+    assert len(fuzzy.lookup('12:423TESQwaaavdddsssssdddddx423TESQwrrsssssssrrr2AlIa:423TESQw', one_match=False)) == 0

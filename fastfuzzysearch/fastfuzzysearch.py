@@ -14,8 +14,17 @@ class FastFuzzySearch:
         self.kb_size = 0
         self.final_automaton_ngrams = {}
 
-    def add_ssdeep_hash(self, ssdeep_hash, descriptor):
+    def add_ssdeep_hash(self, ssdeep_hash: str, descriptor: dict, ngram_whitelist=None):
         ngram_set = self.fastsearch.add_sentence(ssdeep_hash, selection_start=1, append_automaton=False)
+        if ngram_whitelist:
+            ngram_set = ngram_set - ngram_whitelist
+        
+        low_entropy_set = set()
+        for ngram in ngram_set:
+            if self.count_unique_chars(ngram) <= self.ngram_length / 2:
+                low_entropy_set.add(ngram)
+        if len(low_entropy_set) > 0:
+            ngram_set = ngram_set - low_entropy_set
 
         if self.kb_size > 0 and self.kb_size % self.train_step_size == 0:
             self.fit()
@@ -28,12 +37,11 @@ class FastFuzzySearch:
         if not matches:
             add_to_kb = False
             for ngram in ngram_set:
-                if self.count_unique_chars(ngram) > self.ngram_length / 2:
-                    add_to_kb = True
-                    if ngram not in self.final_automaton_ngrams:
-                        self.final_automaton_ngrams[ngram] = {'appearances': 1, 'descriptor': descriptor}
-                    else:
-                        self.final_automaton_ngrams[ngram]['appearances'] += 1
+                add_to_kb = True
+                if ngram not in self.final_automaton_ngrams:
+                    self.final_automaton_ngrams[ngram] = {'appearances': 1, 'descriptor': descriptor}
+                else:
+                    self.final_automaton_ngrams[ngram]['appearances'] += 1
             if add_to_kb:
                 self.kb_size += 1
         else:
