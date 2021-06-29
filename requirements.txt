@@ -1,4 +1,6 @@
 pyssdeep
 fastsearch
 six
+numpy
+pandas
 dask
