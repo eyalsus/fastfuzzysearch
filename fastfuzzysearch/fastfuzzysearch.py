@@ -1,12 +1,14 @@
 
 import re
+from ast import literal_eval
+import dask.dataframe as dd
 import pyssdeep
 from fastsearch import FastSearch
 
 COLON_PATTERN = re.compile(':')
 
 class FastFuzzySearch:
-    def __init__(self, ngram_length, train_step_size=1000, similarity_threshold=70):
+    def __init__(self, ngram_length, train_step_size=1000, similarity_threshold=70, utilize_disk=False, minimal_appearances=1):
         self.ngram_length = ngram_length
         self.train_step_size = train_step_size
         self.fastsearch = FastSearch(COLON_PATTERN, self.ngram_length)
@@ -14,6 +16,11 @@ class FastFuzzySearch:
         self.kb_size = 0
         self.final_automaton_ngrams = {}
         self.similarity_threshold = similarity_threshold
+        self.utilize_disk = utilize_disk
+        self.minimal_appearances = minimal_appearances
+        if self.utilize_disk:
+            with open('ffs.txt', 'w') as f:
+                f.write('"word","appearances","descriptor"\n')
 
     def add_ssdeep_hash(self, ssdeep_hash: str, descriptor: dict, ngram_whitelist=None):
         ngram_set = self.fastsearch.add_sentence(ssdeep_hash, selection_start=1, append_automaton=False)
@@ -52,15 +59,35 @@ class FastFuzzySearch:
 
     
     def fit(self, finalize=False):
+        if self.utilize_disk:
+            with open('ffs.txt', 'a') as f:
+                for word, descriptor in self.final_automaton_ngrams.items():
+                    f.write(f'"{word}","{descriptor["appearances"]}","{descriptor["descriptor"]}"\n') 
+            self.final_automaton_ngrams.clear()
+
+            df = dd.read_csv('ffs.txt', quotechar='"', dtype={
+                'word,': str,
+                'appearances': int,
+                'descriptor': object}
+            )
+            relevent_df = df.groupby(['word', 'descriptor']).appearances.sum()
+            relevent_df = relevent_df[relevent_df >= self.minimal_appearances].compute()
+            for index, value in relevent_df.items():
+                self.add_row_to_final_automaton_ngram(index[0], value, literal_eval(index[1]))
+            
+        print(f'len(self.final_automaton_ngrams): {len(self.final_automaton_ngrams)}')
         self.fastsearch = FastSearch(COLON_PATTERN, self.ngram_length)
         for word, descriptor in self.final_automaton_ngrams.items():
-            if descriptor['appearances'] > 1 or self.kb_size < 10000:
+            if descriptor['appearances'] >= self.minimal_appearances or self.kb_size < 10000:
                 self.fastsearch.add_sentence(word, descriptor=descriptor['descriptor'])
         self.fastsearch.fit()
+
         if finalize:
             self.final_automaton_ngrams.clear()
         self.is_trained = True
 
+    def add_row_to_final_automaton_ngram(self, word, appearances, descriptor):
+        self.final_automaton_ngrams[word] = {'appearances': appearances, 'descriptor': descriptor}
 
     def lookup(self, ssdeep_hash, one_match=False):
         results = []
